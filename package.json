@@ -1,5 +1,5 @@
 {
-  "name": "starter-template",
+  "name": "update-journals",
   "version": "1.0.0",
   "description": "",
   "main": "src/main.js",
@@ -8,7 +8,9 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "node-appwrite": "^12.0.1"
+    "node-appwrite": "^12.0.1",
+    "node-fetch": "^3.3.0",
+    "cheerio": "^1.0.0-rc.12"
   },
   "devDependencies": {
     "prettier": "^3.2.5"
