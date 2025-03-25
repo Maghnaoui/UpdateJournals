@@ -2,7 +2,7 @@
 
 // استيراد المكتبات
 import fetch from "node-fetch";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 import { Client, Databases } from "node-appwrite";
 
 // تهيئة عميل Appwrite
