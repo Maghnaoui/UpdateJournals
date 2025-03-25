@@ -1,9 +1,9 @@
 //import { Client, Users } from 'node-appwrite';
 
 // استيراد المكتبات
-const fetch = require("node-fetch");
-const cheerio = require("cheerio");
-const { Client, Databases } = require("node-appwrite");
+import fetch from "node-fetch";
+import cheerio from "cheerio";
+import { Client, Databases } from "node-appwrite";
 
 // تهيئة عميل Appwrite
 const client = new Client();
