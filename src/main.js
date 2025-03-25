@@ -13,7 +13,7 @@ client
     .setProject("67e18ee000318f712934")                    // معرف المشروع
     .setKey("standard_238f302a4f67efe218c9152db533f95e4e817201a5dcd360dd8da3515db71e158a05d3dc3f0ca1aa92d9ffa7418871ef71dee5c340aada50830ff898d345abe07bfb0e5a55afe275a72e451d0a24f95c04e5959c87c8a5a1f19438e4ecfd5253e5cd0853879e1caa23e56b2a7269c9c751e0da43b65d33d99bb8610afe81f0ac");                          // مفتاح API (إن احتجت)
 
-const databases = new Databases(client, "YOUR_DATABASE_ID");
+const databases = new Databases(client, "67e208370009f4c926ed");
 
 // دالة لتوليد رابط صفحة الجرائد لسنة معينة
 function getJournalPageUrl(year) {
@@ -59,7 +59,7 @@ async function fetchJournalsForYear(year) {
 }
 
 // الوظيفة الأساسية (Handler) التي تستدعيها Appwrite
-module.exports = async (req, res) => {
+export default async (req, res) => {
     try {
         // يمكنك اختيار السنة الحالية أو أي سنة أخرى
         //const currentYear = new Date().getFullYear().toString();
