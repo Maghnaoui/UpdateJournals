@@ -108,7 +108,11 @@ export default async (req, res) => {
             data: newJournals
         });
     } catch (error) {
-        console.error("حدث خطأ في الوظيفة:", error);
-        res.status(500).json({ error: error.message });
+    console.error("حدث خطأ في الوظيفة:", error);
+    if (res && typeof res.status === "function") {
+        return res.status(500).json({ error: error.message });
+    } else {
+        return { error: error.message };
     }
+}
 };
