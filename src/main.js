@@ -76,6 +76,7 @@ export default async (req, res) => {
                 Query.orderDesc("number"),
                 Query.limit(1)
             ]
+        
         );
 
         let lastStoredIssue = 0;
@@ -102,17 +103,27 @@ export default async (req, res) => {
             }
         }
 
-        res.json({
-            message: "تم تحديث بيانات الجرائد بنجاح",
-            newCount: newJournals.length,
-            data: newJournals
-        });
+        // إذا كان الكائن res موجودًا، استخدمه لإرجاع الاستجابة
+        if (res && typeof res.json === "function") {
+            return res.json({
+                message: "تم تحديث بيانات الجرائد بنجاح",
+                newCount: newJournals.length,
+                data: newJournals
+            });
+        } else {
+            // إذا لم يكن res موجودًا، نُرجع الكائن مباشرةً
+            return { 
+                message: "تم تحديث بيانات الجرائد بنجاح", 
+                newCount: newJournals.length, 
+                data: newJournals 
+            };
+        }
     } catch (error) {
-    console.error("حدث خطأ في الوظيفة:", error);
-    if (res && typeof res.status === "function") {
-        return res.status(500).json({ error: error.message });
-    } else {
-        return { error: error.message };
+        console.error("حدث خطأ في الوظيفة:", error);
+        if (res && typeof res.status === "function") {
+            return res.status(500).json({ error: error.message });
+        } else {
+            return { error: error.message };
     }
 }
 };
