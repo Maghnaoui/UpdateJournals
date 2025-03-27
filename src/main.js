@@ -17,26 +17,36 @@ function getJournalPageUrl(year) {
     return `https://www.joradp.dz/JRN/ZA${year}.htm`;
 }
 
-// دالة لجلب بيانات الجرائد من صفحة معينة باستخدام Cheerio مع logging إضافي
+// دالة لجلب بيانات الجرائد من صفحة معينة باستخدام Cheerio مع إضافة هيدر User-Agent
 async function fetchJournalsForYear(year) {
     const url = getJournalPageUrl(year);
     console.log(`جلب الصفحة من: ${url}`);
     
-    const response = await fetch(url);
+    // إعداد الهيدر لمحاكاة متصفح حقيقي
+    const response = await fetch(url, {
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+        }
+    });
     const html = await response.text();
     console.log("تم جلب HTML. الطول:", html.length);
     
+    // تحقق إذا كان HTML يحتوي على كلمة "MaxWin"
+    const containsMaxWin = html.includes("MaxWin");
+    console.log("HTML يحتوي على 'MaxWin'؟", containsMaxWin);
+
     const $ = cheerio.load(html);
-    // استخدام filter على جميع الروابط للتأكد من التقاط تلك التي تحتوي على "MaxWin"
+    const journals = [];
+
+    // استخدام filter للتقاط كل الروابط التي تحتوي على "MaxWin"
     const links = $("a").filter((i, el) => {
         const href = $(el).attr("href");
         return href && href.includes("MaxWin");
     });
     console.log("عدد الروابط التي تحتوي على 'MaxWin':", links.length);
-    
-    const journals = [];
+
     links.each((i, elem) => {
-        const jsCall = $(elem).attr("href"); // مثال: javascript:MaxWin('001')
+        const jsCall = $(elem).attr("href"); // مثل: javascript:MaxWin('001')
         const match = jsCall.match(/MaxWin\('(\d+)'\)/);
         if (match) {
             const issue = match[1]; // رقم الجريدة مثل "001"
@@ -55,6 +65,7 @@ async function fetchJournalsForYear(year) {
             });
         }
     });
+
     console.log(`عدد الجرائد المستخرجة للسنة ${year}: ${journals.length}`);
     return journals;
 }
@@ -62,7 +73,6 @@ async function fetchJournalsForYear(year) {
 // الوظيفة الأساسية (Handler) التي تُستدعى من Appwrite
 export default async (req, res) => {
     try {
-        // استخدام السنة الحالية فقط
         const currentYear = new Date().getFullYear().toString();
         const journals = await fetchJournalsForYear(currentYear);
 
@@ -83,7 +93,7 @@ export default async (req, res) => {
         }
         console.log(`أحدث رقم جريدة محفوظ: ${lastStoredIssue}`);
 
-        // ترشيح الجرائد الجديدة فقط (حيث يكون رقم العدد أكبر من آخر رقم محفوظ)
+        // ترشيح الجرائد الجديدة فقط
         const newJournals = journals.filter(journal => parseInt(journal.number, 10) > lastStoredIssue);
         console.log(`عدد الجرائد الجديدة: ${newJournals.length}`);
 
