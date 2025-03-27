@@ -33,7 +33,7 @@ async function fetchJournalsForYear(year) {
     // الحصول على الاستجابة كـ Buffer
     const buffer = await response.arrayBuffer();
     // جرب فك التشفير باستخدام windows-1256
-    const html = iconv.decode(Buffer.from(buffer), "windows-1256");
+    const html = iconv.decode(Buffer.from(buffer), "latin1");
     console.log("تم جلب HTML. الطول:", html.length);
     console.log("HTML snippet (1000 حرف):", html.slice(0, 1000));
     
