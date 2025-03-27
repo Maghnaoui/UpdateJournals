@@ -33,7 +33,7 @@ async function fetchJournalsForYear(year) {
     
     const html = await response.text();
     console.log("تم جلب HTML. الطول:", html.length);
-    console.log("HTML snippet:", html.slice(0, 500));
+    console.log("HTML snippet:", html.slice(0, 1000));
     
     // تحقق إذا كان HTML يحتوي على "MaxWin"
     const containsMaxWin = html.includes("MaxWin");
