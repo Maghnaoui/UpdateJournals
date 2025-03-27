@@ -20,8 +20,10 @@ function getJournalPageUrl(year) {
 async function fetchRenderedHTML(url) {
   // إعداد Puppeteer مع بعض الخيارات لتفادي مشاكل sandbox في بيئات السيرفر
   const browser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
-  });
+  headless: "new", // أو true إذا لم تكن تستخدم الوضع الجديد
+  executablePath: process.env.CHROME_BIN || '/usr/bin/chromium-browser',
+  args: ["--no-sandbox", "--disable-setuid-sandbox"]
+});
   const page = await browser.newPage();
   // تعيين User-Agent لمحاكاة متصفح حقيقي
   await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36");
