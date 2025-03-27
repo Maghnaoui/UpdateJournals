@@ -21,7 +21,7 @@ async function fetchRenderedHTML(url) {
   // إعداد Puppeteer مع بعض الخيارات لتفادي مشاكل sandbox في بيئات السيرفر
   const browser = await puppeteer.launch({
   headless: "new", // أو true إذا لم تكن تستخدم الوضع الجديد
-  executablePath: process.env.CHROME_BIN || '/usr/bin/chromium-browser'
+  executablePath: process.env.CHROME_BIN || '/usr/bin/chromium-browser',
   args: ["--no-sandbox", "--disable-setuid-sandbox"]
 });
   const page = await browser.newPage();
