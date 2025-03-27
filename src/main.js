@@ -1,6 +1,13 @@
+import { execSync } from "child_process";
 import puppeteer from "puppeteer";
 import * as cheerio from "cheerio";
 import { Client, Databases, Query } from "node-appwrite";
+
+// تثبيت Chromium داخل الوظيفة (خاص بـ Alpine Linux)
+console.log("تثبيت Chromium والاعتماديات...");
+execSync("apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont", { stdio: "inherit" });
+
+console.log("تم التثبيت بنجاح ✅");
 
 // تهيئة عميل Appwrite
 const client = new Client();
@@ -18,11 +25,12 @@ function getJournalPageUrl(year) {
 
 // دالة تستخدم Puppeteer لجلب HTML بعد تنفيذ JavaScript
 async function fetchRenderedHTML(url) {
+  console.log(`جلب الصفحة من: ${url}`);
   // إعداد Puppeteer مع بعض الخيارات لتفادي مشاكل sandbox في بيئات السيرفر
   const browser = await puppeteer.launch({
-  headless: "new", // أو true إذا لم تكن تستخدم الوضع الجديد
-  executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome',
-  args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  headless: "new", // استخدام وضع بدون واجهة
+  executablePath: "/usr/bin/chromium-browser", // تحديد المسار الصحيح
+  args: ["--no-sandbox", "--disable-setuid-sandbox"] // تشغيل بدون صلاحيات root
 });
   const page = await browser.newPage();
   // تعيين User-Agent لمحاكاة متصفح حقيقي
