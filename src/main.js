@@ -17,28 +17,32 @@ function getJournalPageUrl(year) {
     return `https://www.joradp.dz/JRN/ZA${year}.htm`;
 }
 
-// دالة لجلب بيانات الجرائد من صفحة معينة باستخدام Cheerio مع إضافة هيدر User-Agent
+// دالة لجلب بيانات الجرائد من صفحة معينة باستخدام Cheerio مع هيدرات إضافية
 async function fetchJournalsForYear(year) {
     const url = getJournalPageUrl(year);
     console.log(`جلب الصفحة من: ${url}`);
     
-    // إعداد الهيدر لمحاكاة متصفح حقيقي
+    // إضافة هيدرات لمحاكاة متصفح حقيقي
     const response = await fetch(url, {
         headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+            "Accept-Language": "ar,en-US;q=0.9,en;q=0.8",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
     });
+    
     const html = await response.text();
     console.log("تم جلب HTML. الطول:", html.length);
+    console.log("HTML snippet:", html.slice(0, 500));
     
-    // تحقق إذا كان HTML يحتوي على كلمة "MaxWin"
+    // تحقق إذا كان HTML يحتوي على "MaxWin"
     const containsMaxWin = html.includes("MaxWin");
     console.log("HTML يحتوي على 'MaxWin'؟", containsMaxWin);
-
+    
     const $ = cheerio.load(html);
     const journals = [];
 
-    // استخدام filter للتقاط كل الروابط التي تحتوي على "MaxWin"
+    // استخدام filter لالتقاط كل الروابط التي تحتوي على "MaxWin"
     const links = $("a").filter((i, el) => {
         const href = $(el).attr("href");
         return href && href.includes("MaxWin");
@@ -51,7 +55,7 @@ async function fetchJournalsForYear(year) {
         if (match) {
             const issue = match[1]; // رقم الجريدة مثل "001"
             const pdfUrl = `https://www.joradp.dz/FTP/jo-arabe/${year}/A${year}${issue}.pdf`;
-            // استخدام تاريخ اليوم كتاريخ اكتشاف (يمكن تحسينه لاحقاً إذا وُجد تاريخ فعلي)
+            // استخدام تاريخ اليوم كتاريخ اكتشاف
             const date = new Date().toLocaleDateString("ar-EG", {
                 day: "2-digit",
                 month: "long",
@@ -65,7 +69,6 @@ async function fetchJournalsForYear(year) {
             });
         }
     });
-
     console.log(`عدد الجرائد المستخرجة للسنة ${year}: ${journals.length}`);
     return journals;
 }
@@ -93,7 +96,7 @@ export default async (req, res) => {
         }
         console.log(`أحدث رقم جريدة محفوظ: ${lastStoredIssue}`);
 
-        // ترشيح الجرائد الجديدة فقط
+        // ترشيح الجرائد الجديدة فقط (حيث يكون رقم العدد أكبر من آخر رقم محفوظ)
         const newJournals = journals.filter(journal => parseInt(journal.number, 10) > lastStoredIssue);
         console.log(`عدد الجرائد الجديدة: ${newJournals.length}`);
 
