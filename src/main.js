@@ -1,10 +1,10 @@
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
+import iconv from "iconv-lite";
 import { Client, Databases, Query } from "node-appwrite";
 
 // تهيئة عميل Appwrite
 const client = new Client();
-
 client
     .setEndpoint("https://cloud.appwrite.io/v1") // استبدل بعنوان خادم Appwrite الخاص بك
     .setProject("67e18ee000318f712934")               // استبدل بمعرف مشروعك
@@ -12,12 +12,10 @@ client
 
 const databases = new Databases(client, "67e208370009f4c926ed");    // معرف قاعدة البيانات
 
-// دالة لتوليد رابط صفحة الجرائد لسنة معينة
 function getJournalPageUrl(year) {
     return `https://www.joradp.dz/JRN/ZA${year}.htm`;
 }
 
-// دالة لجلب بيانات الجرائد من صفحة معينة باستخدام Cheerio مع هيدرات إضافية
 async function fetchJournalsForYear(year) {
     const url = getJournalPageUrl(year);
     console.log(`جلب الصفحة من: ${url}`);
@@ -31,18 +29,19 @@ async function fetchJournalsForYear(year) {
         }
     });
     
-    const html = await response.text();
-    console.log("تم جلب HTML. الطول:", html.length);
-    console.log("HTML snippet:", html.slice(0, 1000));
+    // الحصول على الاستجابة كـ Buffer
+    const buffer = await response.arrayBuffer();
+    // قم بتجربة فك التشفير باستخدام windows-1256، وإذا لم يعمل، جرب utf-8
+    const html = iconv.decode(Buffer.from(buffer), "windows-1256");
     
-    // تحقق إذا كان HTML يحتوي على "MaxWin"
+    console.log("تم جلب HTML. الطول:", html.length);
+    console.log("HTML snippet:", html.slice(0, 500));
+    
     const containsMaxWin = html.includes("MaxWin");
     console.log("HTML يحتوي على 'MaxWin'؟", containsMaxWin);
     
     const $ = cheerio.load(html);
     const journals = [];
-
-    // استخدام filter لالتقاط كل الروابط التي تحتوي على "MaxWin"
     const links = $("a").filter((i, el) => {
         const href = $(el).attr("href");
         return href && href.includes("MaxWin");
@@ -53,9 +52,8 @@ async function fetchJournalsForYear(year) {
         const jsCall = $(elem).attr("href"); // مثل: javascript:MaxWin('001')
         const match = jsCall.match(/MaxWin\('(\d+)'\)/);
         if (match) {
-            const issue = match[1]; // رقم الجريدة مثل "001"
+            const issue = match[1];
             const pdfUrl = `https://www.joradp.dz/FTP/jo-arabe/${year}/A${year}${issue}.pdf`;
-            // استخدام تاريخ اليوم كتاريخ اكتشاف
             const date = new Date().toLocaleDateString("ar-EG", {
                 day: "2-digit",
                 month: "long",
@@ -73,7 +71,6 @@ async function fetchJournalsForYear(year) {
     return journals;
 }
 
-// الوظيفة الأساسية (Handler) التي تُستدعى من Appwrite
 export default async (req, res) => {
     try {
         const currentYear = new Date().getFullYear().toString();
@@ -96,11 +93,9 @@ export default async (req, res) => {
         }
         console.log(`أحدث رقم جريدة محفوظ: ${lastStoredIssue}`);
 
-        // ترشيح الجرائد الجديدة فقط (حيث يكون رقم العدد أكبر من آخر رقم محفوظ)
         const newJournals = journals.filter(journal => parseInt(journal.number, 10) > lastStoredIssue);
         console.log(`عدد الجرائد الجديدة: ${newJournals.length}`);
 
-        // إضافة الجرائد الجديدة إلى قاعدة البيانات
         for (const journal of newJournals) {
             const docId = `${journal.year}_${journal.number}`;
             try {
