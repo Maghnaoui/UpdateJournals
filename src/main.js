@@ -17,53 +17,52 @@ function getJournalPageUrl(year) {
     return `https://www.joradp.dz/JRN/ZA${year}.htm`;
 }
 
-// دالة لجلب بيانات الجرائد من صفحة معينة باستخدام Cheerio مع تحديد مهلة لطلب fetch
+// دالة لجلب بيانات الجرائد من صفحة معينة باستخدام Cheerio مع logging إضافي
 async function fetchJournalsForYear(year) {
     const url = getJournalPageUrl(year);
+    console.log(`جلب الصفحة من: ${url}`);
     
-    // تحديد مهلة الطلب (مثلاً 10 ثواني)
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-
-    try {
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeout);
-        const html = await response.text();
-        const $ = cheerio.load(html);
-        const journals = [];
-
-        // البحث عن الروابط التي تحتوي على javascript:MaxWin('XXX')
-        $("a[href^='javascript:MaxWin']").each((i, elem) => {
-            const jsCall = $(elem).attr("href"); // مثل: javascript:MaxWin('001')
-            const match = jsCall.match(/MaxWin\('(\d+)'\)/);
-            if (match) {
-                const issue = match[1]; // رقم الجريدة مثل "001"
-                const pdfUrl = `https://www.joradp.dz/FTP/jo-arabe/${year}/A${year}${issue}.pdf`;
-                // استخدام تاريخ اليوم كتاريخ اكتشاف
-                const date = new Date().toLocaleDateString("ar-EG", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric"
-                });
-                journals.push({
-                    number: issue,
-                    date: date,
-                    pdfUrl: pdfUrl,
-                    year: year
-                });
-            }
-        });
-
-        return journals;
-    } catch (error) {
-        throw new Error("Fetch timed out or failed: " + error.message);
-    }
+    const response = await fetch(url);
+    const html = await response.text();
+    console.log("تم جلب HTML. الطول:", html.length);
+    
+    const $ = cheerio.load(html);
+    // استخدام filter على جميع الروابط للتأكد من التقاط تلك التي تحتوي على "MaxWin"
+    const links = $("a").filter((i, el) => {
+        const href = $(el).attr("href");
+        return href && href.includes("MaxWin");
+    });
+    console.log("عدد الروابط التي تحتوي على 'MaxWin':", links.length);
+    
+    const journals = [];
+    links.each((i, elem) => {
+        const jsCall = $(elem).attr("href"); // مثال: javascript:MaxWin('001')
+        const match = jsCall.match(/MaxWin\('(\d+)'\)/);
+        if (match) {
+            const issue = match[1]; // رقم الجريدة مثل "001"
+            const pdfUrl = `https://www.joradp.dz/FTP/jo-arabe/${year}/A${year}${issue}.pdf`;
+            // استخدام تاريخ اليوم كتاريخ اكتشاف (يمكن تحسينه لاحقاً إذا وُجد تاريخ فعلي)
+            const date = new Date().toLocaleDateString("ar-EG", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            });
+            journals.push({
+                number: issue,
+                date: date,
+                pdfUrl: pdfUrl,
+                year: year
+            });
+        }
+    });
+    console.log(`عدد الجرائد المستخرجة للسنة ${year}: ${journals.length}`);
+    return journals;
 }
 
 // الوظيفة الأساسية (Handler) التي تُستدعى من Appwrite
 export default async (req, res) => {
     try {
-        // استخدام السنة الحالية فقط لجلب الجرائد الجديدة
+        // استخدام السنة الحالية فقط
         const currentYear = new Date().getFullYear().toString();
         const journals = await fetchJournalsForYear(currentYear);
 
@@ -76,16 +75,17 @@ export default async (req, res) => {
                 Query.orderDesc("number"),
                 Query.limit(1)
             ]
-        
         );
 
         let lastStoredIssue = 0;
         if (latestDoc.documents && latestDoc.documents.length > 0) {
             lastStoredIssue = parseInt(latestDoc.documents[0].number, 10);
         }
+        console.log(`أحدث رقم جريدة محفوظ: ${lastStoredIssue}`);
 
         // ترشيح الجرائد الجديدة فقط (حيث يكون رقم العدد أكبر من آخر رقم محفوظ)
         const newJournals = journals.filter(journal => parseInt(journal.number, 10) > lastStoredIssue);
+        console.log(`عدد الجرائد الجديدة: ${newJournals.length}`);
 
         // إضافة الجرائد الجديدة إلى قاعدة البيانات
         for (const journal of newJournals) {
@@ -103,7 +103,6 @@ export default async (req, res) => {
             }
         }
 
-        // إذا كان الكائن res موجودًا، استخدمه لإرجاع الاستجابة
         if (res && typeof res.json === "function") {
             return res.json({
                 message: "تم تحديث بيانات الجرائد بنجاح",
@@ -111,7 +110,6 @@ export default async (req, res) => {
                 data: newJournals
             });
         } else {
-            // إذا لم يكن res موجودًا، نُرجع الكائن مباشرةً
             return { 
                 message: "تم تحديث بيانات الجرائد بنجاح", 
                 newCount: newJournals.length, 
@@ -124,6 +122,6 @@ export default async (req, res) => {
             return res.status(500).json({ error: error.message });
         } else {
             return { error: error.message };
+        }
     }
-}
 };
