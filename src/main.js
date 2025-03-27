@@ -35,7 +35,7 @@ async function fetchJournalsForYear(year) {
     const html = iconv.decode(Buffer.from(buffer), "windows-1256");
     
     console.log("تم جلب HTML. الطول:", html.length);
-    console.log("HTML snippet:", html.slice(0, 500));
+    console.log("HTML snippet:", html.slice(0, 1200));
     
     const containsMaxWin = html.includes("MaxWin");
     console.log("HTML يحتوي على 'MaxWin'؟", containsMaxWin);
