@@ -5,6 +5,7 @@ import { Client, Databases, Query } from "node-appwrite";
 
 // تهيئة عميل Appwrite
 const client = new Client();
+
 client
     .setEndpoint("https://cloud.appwrite.io/v1") // استبدل بعنوان خادم Appwrite الخاص بك
     .setProject("67e18ee000318f712934")               // استبدل بمعرف مشروعك
@@ -20,24 +21,23 @@ async function fetchJournalsForYear(year) {
     const url = getJournalPageUrl(year);
     console.log(`جلب الصفحة من: ${url}`);
     
-    // إضافة هيدرات لمحاكاة متصفح حقيقي
     const response = await fetch(url, {
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
             "Accept-Language": "ar,en-US;q=0.9,en;q=0.8",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Encoding": "gzip, deflate, br"
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            // عدم تحديد Accept-Encoding لتسمح لـ node-fetch بفك الضغط تلقائيًا
         }
     });
-    
+
     // الحصول على الاستجابة كـ Buffer
     const buffer = await response.arrayBuffer();
-    // قم بتجربة فك التشفير باستخدام windows-1256، وإذا لم يعمل، جرب utf-8
-    const html = iconv.decode(Buffer.from(buffer), "utf-8");
-    
+    // جرب فك التشفير باستخدام windows-1256
+    const html = iconv.decode(Buffer.from(buffer), "windows-1256");
     console.log("تم جلب HTML. الطول:", html.length);
-    console.log("HTML snippet:", html.slice(0, 1200));
+    console.log("HTML snippet (1000 حرف):", html.slice(0, 1000));
     
+    // تحقق إذا كان HTML يحتوي على "MaxWin"
     const containsMaxWin = html.includes("MaxWin");
     console.log("HTML يحتوي على 'MaxWin'؟", containsMaxWin);
     
@@ -50,7 +50,7 @@ async function fetchJournalsForYear(year) {
     console.log("عدد الروابط التي تحتوي على 'MaxWin':", links.length);
 
     links.each((i, elem) => {
-        const jsCall = $(elem).attr("href"); // مثل: javascript:MaxWin('001')
+        const jsCall = $(elem).attr("href");
         const match = jsCall.match(/MaxWin\('(\d+)'\)/);
         if (match) {
             const issue = match[1];
@@ -77,7 +77,6 @@ export default async (req, res) => {
         const currentYear = new Date().getFullYear().toString();
         const journals = await fetchJournalsForYear(currentYear);
 
-        // استعلام للحصول على أحدث جريدة محفوظة للسنة الحالية
         const latestDoc = await databases.listDocuments(
             "67e208370009f4c926ed",  // معرف قاعدة البيانات
             "67e2085c001f7c56c20e",  // معرف المجموعة "journals"
