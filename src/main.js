@@ -31,11 +31,12 @@ async function fetchRenderedHTML(url) {
   headless: "new", // استخدام وضع بدون واجهة
   executablePath: "/usr/bin/chromium-browser", // تحديد المسار الصحيح
   args: ["--no-sandbox", "--disable-setuid-sandbox"] // تشغيل بدون صلاحيات root
+  timeout: 60000 // مهلة 60 ثانية
 });
   const page = await browser.newPage();
   // تعيين User-Agent لمحاكاة متصفح حقيقي
   await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36");
-  await page.goto(url, { waitUntil: "networkidle0" });
+  await page.goto(url, { waitUntil: "networkidle2", timeout: 15000 });
   const html = await page.content();
   await browser.close();
   return html;
