@@ -1,7 +1,7 @@
-# วำสฮฯวใ ีๆัษ Node.js วแใศไํษ ฺแ์ Alpine Linux
-FROM node:20-alpine
+# ุงุณุชุฎุฏุงู… ุตูุฑุฉ Node.js ุงูู…ุจููุฉ ุนูู Alpine Linux
+FROM node:20.19.0
 
-# สหศํส Chromium ๆวแวฺสใวฯํวส วแแวาใษ แสิÛํแ Puppeteer
+# ุชุซุจูุช Chromium ูุงูุงุนุชู…ุงุฏูุงุช ุงููุงุฒู…ุฉ ูุชุดุบูู Puppeteer
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -13,19 +13,19 @@ RUN apk add --no-cache \
     font-noto-cjk \
     font-noto-emoji
 
-# สฺํํไ ใสÛํัวส วแศํฦษ แสอฯํฯ ใ฿วไ Chromium
+# ุชุนููู ู…ุชุบูุฑุงุช ุงูุจูุฆุฉ ูุชุญุฏูุฏ ู…ูุงู Chromium
 ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium-browser"
 ENV CHROME_BIN="/usr/bin/chromium-browser"
 
-# สฺํํไ ใฬแฯ วแฺใแ ฯวฮแ วแอวๆํษ
+# ุชุนููู ู…ุฌูุฏ ุงูุนู…ู ุฏุงุฎู ุงูุญุงููุฉ
 WORKDIR /app
 
-# ไำฮ ใแÝวส package.json ๆ package-lock.json รๆแว๐ แสหศํส วแวฺสใวฯํวส
+# ูุณุฎ ู…ููุงุช package.json ู package-lock.json ุฃููุงู ูุชุซุจูุช ุงูุงุนุชู…ุงุฏูุงุช
 COPY package.json package-lock.json ./
 RUN npm install
 
-# ไำฮ ศวÞํ ใแÝวส วแใิัๆฺ
+# ูุณุฎ ุจุงูู ู…ููุงุช ุงูู…ุดุฑูุน
 COPY . .
 
-# วแรใั วแวÝสัวึํ แสิÛํแ วแๆูํÝษ
+# ุงูุฃู…ุฑ ุงูุงูุชุฑุงุถู ูุชุดุบูู ุงููุธููุฉ
 CMD ["node", "src/main.js"]
