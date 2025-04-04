@@ -3,12 +3,6 @@ import puppeteer from "puppeteer";
 import * as cheerio from "cheerio";
 import { Client, Databases, Query } from "node-appwrite";
 
-// تثبيت Chromium داخل الوظيفة (خاص بـ Alpine Linux)
-console.log("تثبيت Chromium والاعتماديات...");
-execSync("apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont", { stdio: "inherit" });
-
-console.log("تم التثبيت بنجاح ✅");
-
 // تهيئة عميل Appwrite
 const client = new Client();
 client
