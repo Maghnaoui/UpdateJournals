@@ -24,3 +24,9 @@ jobs:
       - name: Run Docker container
         run: |
           docker run --rm update-journals
+
+      - name: Debug Docker container
+        run: |
+          docker run --rm update-journals
+          echo "Debugging information:"
+          docker logs $(docker ps -q -l)
