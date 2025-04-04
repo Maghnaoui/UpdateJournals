@@ -1,8 +1,8 @@
 {
   "name": "update-journals",
   "version": "1.0.0",
-  "description": "ÊŸÌ›…  ÕœÌÀ «·Ã—«∆œ »«” Œœ«„ Appwrite Ê Puppeteer",
-  "main": "src/main.js",
+  "description": "√¶√ô√≠√ù√â √ä√ç√è√≠√ã √á√°√å√ë√á√Ü√è √à√á√ì√ä√é√è√á√£ Appwrite √¶ Puppeteer",
+  "main": "src/main.mjs",
   "type": "module",
   "scripts": {
     "format": "prettier --write ."
