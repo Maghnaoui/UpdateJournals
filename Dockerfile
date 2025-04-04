@@ -28,4 +28,4 @@ RUN npm install
 COPY . .
 
 # الأمر الافتراضي لتشغيل الوظيفة
-CMD ["node", "src/main.js"]
+CMD ["node", "src/main.mjs"]
