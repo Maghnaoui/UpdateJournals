@@ -20,7 +20,7 @@ function getJournalPageUrl(year) {
 // دالة تستخدم Puppeteer لجلب HTML بعد تنفيذ JavaScript
 async function fetchRenderedHTML(url) {
   console.log(`جلب الصفحة من: ${url}`);
-<<<<<<< HEAD
+
   // إعداد Puppeteer مع بعض الخيارات لتفادي مشاكل sandbox في بيئات السيرفر
   const browser = await puppeteer.launch({
   headless: "new", // استخدام وضع بدون واجهة
