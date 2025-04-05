@@ -2,7 +2,7 @@ FROM node:20
 
 # تحديث apt-get وتثبيت Chromium وبعض المكتبات الضرورية لتشغيل Puppeteer
 RUN apt-get update && apt-get install -y \
-    chromium \
+    chromium-browser \
     fonts-noto \
     libnss3 \
     libatk1.0-0 \
