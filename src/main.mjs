@@ -24,7 +24,7 @@ async function fetchRenderedHTML(url) {
   // إعداد Puppeteer مع بعض الخيارات لتفادي مشاكل sandbox في بيئات السيرفر
   const browser = await puppeteer.launch({
   headless: "new", // استخدام وضع بدون واجهة
-  executablePath: "/usr/bin/chromium-browser", // تحديد المسار الصحيح
+  executablePath: "/usr/bin/chromium", // تحديد المسار الصحيح
   args: ["--no-sandbox", "--disable-setuid-sandbox"], // تشغيل بدون صلاحيات root
   timeout: 60000 // مهلة 60 ثانية
 });
