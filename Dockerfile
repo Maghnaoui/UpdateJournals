@@ -31,4 +31,4 @@ RUN npm install
 COPY . .
 
 # تشغيل الوظيفة
-CMD ["node", "--input-type=module", "src/main.mjs"]
+CMD ["node", "src/main.mjs"]
