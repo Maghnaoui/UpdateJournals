@@ -1,33 +1,34 @@
-# استخدام صورة Node.js المبنية على Alpine Linux
-FROM node:20.19.0-alpine
+FROM node:20
 
-RUN echo $PATH && which apk
-
-# تثبيت Chromium والاعتماديات اللازمة لتشغيل Puppeteer
-RUN /sbin/apk add --no-cache \
+# تحديث apt-get وتثبيت Chromium وبعض المكتبات الضرورية لتشغيل Puppeteer
+RUN apt-get update && apt-get install -y \
     chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    font-noto \
-    font-noto-cjk \
-    font-noto-emoji
+    fonts-noto \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libpango-1.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# تعيين متغيرات البيئة لتحديد مكان Chromium
-ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium-browser"
-ENV CHROME_BIN="/usr/bin/chromium-browser"
+# تعيين متغيرات البيئة لتحديد مسار Chromium
+ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium" \
+    CHROME_BIN="/usr/bin/chromium"
 
-# تعيين مجلد العمل داخل الحاوية
 WORKDIR /app
 
-# نسخ ملفات package.json و package-lock.json أولاً لتثبيت الاعتماديات
+# نسخ ملفات الحزمة وتثبيت الاعتماديات
 COPY package.json package-lock.json ./
 RUN npm install
 
 # نسخ باقي ملفات المشروع
 COPY . .
 
-# الأمر الافتراضي لتشغيل الوظيفة
+# تشغيل الوظيفة
 CMD ["node", "src/main.mjs"]
