@@ -1,10 +1,9 @@
 name: Update Journals Function
 
-# ÊÔÛíá ÇáæÙíÝÉ ßá ÓÇÚÉ Ãæ ÚäÏ ÇáØáÈ ÇáíÏæí
 on:
   schedule:
-    - cron: "0 * * * *"   # ßá ÓÇÚÉ ÚäÏ ÇáÏÞíÞÉ 0
-  workflow_dispatch:      # áÊÔÛíáå íÏæíðÇ ÅÐÇ ÑÛÈÊ
+    - cron: "0 * * * *"   # تشغيل كل ساعة عند الدقيقة 0
+  workflow_dispatch:
 
 jobs:
   update:
@@ -14,17 +13,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Verify Node.js version and modules
-        run: |
-          docker run --rm update-journals node -v
-          docker run --rm update-journals npm list
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker image
         run: |
           docker build -t update-journals .
+
+      - name: Verify Node.js version and modules
+        run: |
+          docker run --rm update-journals node -v
+          docker run --rm update-journals npm list
 
       - name: Run Docker container
         run: |
