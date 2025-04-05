@@ -1,5 +1,5 @@
 # استخدام صورة Node.js المبنية على Alpine Linux
-FROM node:20.19.0
+FROM node:20.19.0-alpine
 
 # تثبيت Chromium والاعتماديات اللازمة لتشغيل Puppeteer
 RUN apk add --no-cache \
