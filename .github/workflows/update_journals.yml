@@ -2,8 +2,8 @@ name: Update Journals Function
 
 on:
   schedule:
-    - cron: "0 * * * *"   # تشغيل كل ساعة عند الدقيقة 0
-  workflow_dispatch:
+    - cron: "0 * * * *"    # تشغيل كل ساعة
+  workflow_dispatch:     # للسماح بالتشغيل اليدوي
 
 jobs:
   update:
@@ -17,20 +17,12 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker image
-        run: |
-          docker build -t update-journals .
+        run: docker build -t update-journals .
 
-      - name: Verify Node.js version and modules
-        run: |
-          docker run --rm update-journals node -v
-          docker run --rm update-journals npm list
-
-      - name: Run Docker container
-        run: |
-          docker run --rm update-journals
-
-      - name: Debug Docker container
-        run: |
-          docker run --rm update-journals
-          echo "Debugging information:"
-          docker logs $(docker ps -q -l)
+      - name: Run Scraper and Update DB
+        # هذه هي الخطوة المعدلة
+        # 1. نجعل السر متاحًا كمتغير بيئة
+        # 2. نمرر متغير البيئة إلى حاوية دوكر باستخدام -e
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+        run: docker run -e FIREBASE_SERVICE_ACCOUNT_KEY --rm update-journals
