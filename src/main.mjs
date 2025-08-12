@@ -1,11 +1,11 @@
-import { execSync } from "child_process";
-import puppeteer from "puppeteer";
-import * as cheerio from "cheerio";
 import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
+import puppeteer from "puppeteer";
+import * as cheerio from "cheerio";
 
 // --- الخطوة 1: تهيئة Firebase Admin SDK ---
-// لا تضع بيانات الاعتماد هنا مباشرة! سنستخدم Github Secrets.
+// يتم قراءة بيانات الاعتماد من Github Secrets
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 
 initializeApp({
@@ -13,6 +13,7 @@ initializeApp({
 });
 
 const db = getFirestore();
+const messaging = getMessaging();
 
 // --- دوال مساعدة ---
 
@@ -53,14 +54,13 @@ function getMonthNumber(arabicMonth) {
   return mapping[arabicMonth.trim()] || "00";
 }
 
-// --- دالة استخلاص البيانات الجديدة (بناءً على منطق Python) ---
+// --- دالة استخلاص البيانات (بناءً على منطق Python) ---
 async function fetchJournalsForYear(year) {
   const url = getJournalPageUrl(year);
   const html = await fetchRenderedHTML(url);
   const $ = cheerio.load(html);
   const journals = [];
 
-  // البحث عن كل جداول الشهور في الصفحة
   const monthTables = $('body > div > table:nth-child(3) > tbody > tr > td > table');
 
   monthTables.each((i, table) => {
@@ -85,7 +85,6 @@ async function fetchJournalsForYear(year) {
       }
       
       if (link.length > 0) {
-        // إذا لم يكن هناك نص يوم في الخلية، نستخدم العداد الحالي
         if (!cellText || !/^\d+$/.test(cellText)) {
            dayCounter++;
         }
@@ -115,33 +114,28 @@ async function fetchJournalsForYear(year) {
   return journals;
 }
 
-// --- دالة إرسال الإشعار (تبقى كما هي) ---
-function sendNotification(journal) {
+// --- دالة إرسال الإشعار الجديدة (باستخدام Admin SDK) ---
+async function sendNotification(journal) {
   console.log(`إرسال إشعار للجريدة رقم ${journal.number}...`);
-  const serverKey = process.env.FCM_SERVER_KEY;
-  const command = `
-    curl -X POST -H "Authorization: key=${serverKey}" \
-    -H "Content-Type: application/json" \
-    -d '{
-          "to": "/topics/new_journal",
-          "notification": {
-            "title": "عدد جديد من الجريدة الرسمية!",
-            "body": "صدر العدد رقم ${journal.number} لسنة ${journal.year}.",
-            "sound": "default"
-          }
-        }' \
-    https://fcm.googleapis.com/fcm/send
-  `;
+
+  const payload = {
+    notification: {
+      title: "عدد جديد من الجريدة الرسمية!",
+      body: `صدر العدد رقم ${journal.number} لسنة ${journal.year}.`,
+    },
+    topic: "new_journal",
+  };
+
   try {
-    execSync(command, { stdio: 'inherit' });
-    console.log("تم إرسال الإشعار بنجاح.");
+    const response = await messaging.send(payload);
+    console.log("تم إرسال الإشعار بنجاح:", response);
   } catch (error) {
     console.error("خطأ في إرسال الإشعار:", error);
   }
 }
 
 
-// --- الدالة الرئيسية (تبقى كما هي) ---
+// --- الدالة الرئيسية ---
 const run = async () => {
   try {
     const currentYear = new Date().getFullYear().toString();
@@ -172,7 +166,7 @@ const run = async () => {
         batch.set(docRef, journal);
         console.log(`تمت إضافة الجريدة: ${journal.year}_${journal.number}`);
         
-        sendNotification(journal);
+        await sendNotification(journal);
       }
       await batch.commit();
       console.log("تم حفظ كل الجرائد الجديدة بنجاح.");
@@ -185,7 +179,6 @@ const run = async () => {
             const existingYears = data.availableYears || [];
             if (!existingYears.includes(parseInt(currentYear, 10))) {
               console.log(`إضافة السنة الجديدة ${currentYear} إلى metadata...`);
-              // إضافة السنة الجديدة في بداية القائمة للحفاظ على الترتيب
               existingYears.unshift(parseInt(currentYear, 10));
               await metadataRef.update({ availableYears: existingYears });
             }
