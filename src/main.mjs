@@ -26,7 +26,7 @@ async function fetchRenderedHTML(url) {
   const browser = await puppeteer.launch({
     headless: "new",
     executablePath: "/usr/bin/chromium",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--ignore-certificate-errors"],
     timeout: 60000,
   });
   const page = await browser.newPage();
